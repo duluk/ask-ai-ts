@@ -1,0 +1,38 @@
+# Allowlisting gitignore template for GO projects prevents us
+# from adding various unwanted local files, such as generated
+# files, developer configurations or IDE-specific files etc.
+#
+# Recommended: Go.AllowList.gitignore
+
+# Ignore everything
+*
+
+# But not these files...
+!/.gitignore
+
+!CLAUDE.md
+!README.md
+!TODO.md
+!LICENSE
+
+!Makefile
+
+# Allow all directories first
+!*/
+
+# But immediately block these directories and everything in them
+node_modules/
+dist/
+coverage/
+
+# TypeScript files - but not in the blocked directories above
+!*.ts
+!*.js
+!*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!jest.config.js
+
+event.example.ts
+generator.example.ts
