@@ -98,7 +98,11 @@ export class AnthropicClient extends BaseLLMClient {
                 });
 
                 let fullContent = '';
-                let usage = {
+                let usage: {
+                    promptTokens: number;
+                    completionTokens: number;
+                    totalTokens: number;
+                } = {
                     promptTokens: 0,
                     completionTokens: 0,
                     totalTokens: 0
@@ -106,10 +110,12 @@ export class AnthropicClient extends BaseLLMClient {
 
                 for await (const chunk of stream) {
                     if (chunk.type === 'content_block_delta') {
-                        const text = chunk.delta?.text || '';
-                        fullContent += text;
-                        emitter.emit('data', text);
-                        logger.log('debug', 'Anthropic chunk:', { chunk: chunk });
+                        if ('text' in chunk.delta) {
+                            const text = chunk.delta?.text || '';
+                            fullContent += text;
+                            emitter.emit('data', text);
+                            logger.log('debug', 'Anthropic chunk:', { chunk: chunk });
+                        }
                     }
 
                     if (chunk.type === 'message_delta') {
@@ -174,12 +180,14 @@ export class AnthropicClient extends BaseLLMClient {
             });
 
             return {
-                content: response.content[0]?.text || '',
+                content: response.content[0] && 'text' in response.content[0]
+                    ? response.content[0].text
+                    : '',
                 usage: {
                     // Anthropic may not provide detailed token usage in the same format
-                    promptTokens: response.usage?.input_tokens,
-                    completionTokens: response.usage?.output_tokens,
-                    totalTokens: (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0)
+                    promptTokens: response.usage?.input_tokens ?? 0,
+                    completionTokens: response.usage?.output_tokens ?? 0,
+                    totalTokens: (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0)
                 }
             };
         } catch (error) {
